@@ -1,0 +1,29 @@
+# Local backups made before every file edit — never shared, never committed.
+backups/
+
+# OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / tooling
+.vscode/
+.idea/
+*.swp
+
+# Real client media & assets NEVER go in the repo.
+# Use the clearly-labeled placeholder in assets/ instead.
+assets/client/
+*.mp4
+*.mov
+*.m4v
+*.avi
+*.mxf
+
+# ...but the placeholder watermark IS tracked, so allow it back in:
+!assets/placeholder-watermark.png
+
+# Premiere project files (these are the client's, and they're huge)
+*.prproj
+*.prproj.bak
+Adobe Premiere Pro Auto-Save/
