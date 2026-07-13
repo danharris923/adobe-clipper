@@ -5,7 +5,57 @@ handful of clips. The client picks her clips, types the intro and outro
 text, and clicks one button — the plugin duplicates a pre-built master
 sequence, lays the clips in, and triggers the render.
 
-Status: **scaffolding.** No plugin logic written yet.
+Status: **first build written, not yet tested against Premiere.**
+
+---
+
+## One-time setup in Premiere (do this before loading the plugin)
+
+The plugin doesn't invent the look of the reel — it assembles pieces you
+build by hand, once. There are three of them.
+
+### 1. The master sequence
+
+Make a sequence in your Premiere project, name it `MASTER` (any name works,
+as long as it matches the name in the panel's Setup drawer), and set it to
+**1080×1920, 30fps**.
+
+Give it **two video tracks and one audio track**, and leave them empty:
+
+| Track | What the plugin puts there |
+|-------|----------------------------|
+| V1 | opening card → your clips → closing card, end to end |
+| V2 | the watermark, stretched across the whole reel |
+| A1 | the clips' own sound |
+
+The plugin **copies** this sequence on every build and works on the copy.
+The master is never modified. If it can't find the master by name, the
+build stops with an error rather than quietly building something wrong.
+
+### 2. The two text cards (`.mogrt` files)
+
+Design the opening card in Premiere's **Essential Graphics** panel — font,
+colour, background, animation, however you want it — with a text layer for
+the wording. Then **Export as Motion Graphics Template** to a `.mogrt` file.
+Do the same for the closing card.
+
+The reason it's a `.mogrt` rather than a layer inside the master: a `.mogrt`
+exposes its text as a parameter that the plugin can actually set. A
+hand-drawn text layer doesn't, and there's no way to reach into one from a
+plugin. This also means you can restyle the cards any time by re-exporting
+the `.mogrt` — no code change needed.
+
+*If the client's words end up in the wrong text layer,* open the debug
+console — the plugin logs every parameter the `.mogrt` exposes, by name.
+
+### 3. An export preset (`.epr`)
+
+In Premiere, set up an export the way you want it (H.264, vertical) and save
+the settings as a preset. That writes an `.epr` file. Point the panel at it
+in the Setup drawer.
+
+This one is optional. Without it the reel is still built and left open in
+Premiere — only the automatic render is skipped.
 
 ---
 

@@ -39,6 +39,47 @@ you're teaching, not just executing.
   ENTIRE runtime regardless of how long the final video ends up being. Must
   live on its own track so nothing else can ever cover it.
 
+### Text cards are .mogrt files — not layers in the master
+The intro/outro cards are Motion Graphics Templates, designed once in
+Premiere's Essential Graphics panel and exported as `.mogrt`. The plugin
+inserts them with `SequenceEditor.insertMogrtFromPath()` and sets their
+wording through component parameters.
+
+This is not a stylistic choice — it's the only supported path. UXP exposes
+no API for rewriting the text of a hand-built Essential Graphics layer, so
+a card living inside the master sequence could be placed but never worded.
+A `.mogrt` exposes its text as a real parameter. Do not attempt to reach
+into graphics internals to avoid this.
+
+### Transitions eat frames — this is accepted, not a bug
+A cross-dissolve needs overlapping footage ("handles") to blend. Clips used
+at full native length have none by definition. Premiere resolves this by
+pulling the clips slightly into each other, so the finished reel runs a
+little shorter than the sum of its clips. That trade was made deliberately:
+Dan chose dissolves over hard cuts, kept short (default 10 frames /
+~0.33s at 30fps — see `TRANSITION_FRAMES` in index.js) so the loss is
+small and the cut just reads as "not jarring."
+
+Consequently the UI's runtime figure is an ESTIMATE and must be labelled as
+one. The true length is only known after the transitions are applied.
+
+### Track layout the master MUST have
+The plugin depends on this contract. Validation blocks the build if the
+master has too few video tracks.
+
+| Track | Zero-based index | Holds |
+|-------|------------------|-------|
+| V1 | 0 | intro card → product clips → outro card, end to end |
+| V2 | 1 | watermark, alone, stretched to the full runtime |
+| A1 | 0 | the clips' own source audio |
+
+Note UXP track indexes are zero-based: video track 0 is the UI's "V1".
+
+The watermark is placed by the plugin (from the UI's asset picker), not
+inherited from the master — the master only has to provide the empty track
+for it. It is stretched to the sequence's end time AFTER transitions are
+applied, which is what guarantees full coverage at any clip count.
+
 ### Audio
 - Default: keep each clip's original source audio
 - UI toggle to mute all source audio instead
@@ -46,8 +87,15 @@ you're teaching, not just executing.
 
 ### The master sequence pattern (important — do not skip)
 - There is a hand-built "master" sequence in the Premiere project that
-  contains the intro/outro text layout, the watermark track, and the
-  default transition style already configured.
+  carries the 1080×1920/30fps sequence settings and the empty track layout
+  above. (It does NOT carry the text cards — see the .mogrt note — and it
+  does not need the watermark pre-placed.)
+- Premiere's UXP API has NO "duplicate sequence" method. The copy is made
+  with `sequence.createCloneAction()` inside a transaction. The clone action
+  does not hand back the new sequence, so the plugin snapshots every
+  sequence GUID, clones, then diffs to find the new one. Do not "simplify"
+  this by matching on a name like "MASTER Copy" — that name is localised
+  and collides when copies already exist.
 - The plugin must NEVER build directly onto the master. Every build
   operation duplicates the master sequence first, renames the duplicate
   (client name / date), and does all work on the duplicate.
@@ -61,6 +109,13 @@ you're teaching, not just executing.
 - No watermark asset is set/found
 - No active Premiere project
 - The named master sequence can't be found in the project
+- The intro/outro `.mogrt` card templates aren't set
+- The master sequence has fewer video tracks than the layout above needs
+
+### Validation — proceed but say so if:
+- No export preset (`.epr`) or output folder is set. The reel still gets
+  built; only the render is skipped, with a message telling the client to
+  export by hand. A missing preset must never throw away a good build.
 
 ### Validation — warn (but allow build) if:
 - Any selected clip appears offline/missing

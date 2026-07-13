@@ -1,0 +1,116 @@
+<!--
+  Client Reel Builder — panel markup.
+
+  UXP renders this with its own layout engine. It looks like HTML and it
+  mostly behaves like HTML, but it is NOT a browser: there's no <input
+  type="file"> that works, no drag-and-drop from Explorer, and only a
+  subset of CSS. File pickers have to go through the UXP storage API,
+  which is why every "Choose..." button below is a real <button> that
+  calls into index.js rather than a file input.
+-->
+<div id="panel">
+
+  <header>
+    <h1>Client Reel Builder</h1>
+    <p class="sub">Pick your clips, add your words, press the button.</p>
+  </header>
+
+  <!-- ── Step 1: what to call it ───────────────────────────────────── -->
+  <section>
+    <h2>1. Name this reel</h2>
+    <label for="clientName">Client or project name</label>
+    <input id="clientName" type="text" placeholder="e.g. Acme Skincare" />
+    <p class="hint">
+      Used to name the new sequence, e.g. <em>Acme Skincare_2026-07-12</em>.
+    </p>
+  </section>
+
+  <!-- ── Step 2: the words ─────────────────────────────────────────── -->
+  <section>
+    <h2>2. Your words</h2>
+
+    <label for="introText">Opening text</label>
+    <input id="introText" type="text" placeholder="Shown on the first card" />
+
+    <label for="outroText">Closing text</label>
+    <input id="outroText" type="text" placeholder="Shown on the last card" />
+  </section>
+
+  <!-- ── Step 3: the clips ─────────────────────────────────────────── -->
+  <section>
+    <h2>3. Your clips</h2>
+    <button id="pickClips" class="secondary">Choose video clips…</button>
+    <p id="clipCount" class="hint">No clips chosen yet.</p>
+
+    <!-- Filled in by index.js. Each row gets Up/Down buttons, because the
+         order of this list is the order they'll appear in the video. -->
+    <ul id="clipList"></ul>
+  </section>
+
+  <!-- ── Step 4: options ───────────────────────────────────────────── -->
+  <section>
+    <h2>4. Options</h2>
+
+    <label class="checkbox">
+      <input id="keepAudio" type="checkbox" checked />
+      <span>Keep the sound from my clips</span>
+    </label>
+    <p class="hint">Untick this to make the whole video silent.</p>
+  </section>
+
+  <!-- ── Setup: the things that rarely change ──────────────────────── -->
+  <!-- Collapsed by default. The client sets these once; after that they're
+       remembered and she never has to look in here again. -->
+  <details id="setup">
+    <summary>Setup — you only need to do this once</summary>
+
+    <label for="masterName">Name of the master sequence in Premiere</label>
+    <input id="masterName" type="text" placeholder="MASTER" />
+    <p class="hint">
+      The plugin copies this sequence every time it builds, and never
+      changes the original.
+    </p>
+
+    <label>Watermark image</label>
+    <button id="pickWatermark" class="secondary">Choose watermark…</button>
+    <p id="watermarkPath" class="hint path">Not set.</p>
+
+    <label>Opening card template (.mogrt)</label>
+    <button id="pickIntroMogrt" class="secondary">Choose opening card…</button>
+    <p id="introMogrtPath" class="hint path">Not set.</p>
+
+    <label>Closing card template (.mogrt)</label>
+    <button id="pickOutroMogrt" class="secondary">Choose closing card…</button>
+    <p id="outroMogrtPath" class="hint path">Not set.</p>
+
+    <label>Export preset (.epr)</label>
+    <button id="pickPreset" class="secondary">Choose export preset…</button>
+    <p id="presetPath" class="hint path">Not set.</p>
+    <p class="hint">
+      Without this the reel is still built — you'd just export it yourself
+      from Premiere's File → Export menu.
+    </p>
+
+    <label for="outputFolder">Save finished videos to</label>
+    <button id="pickOutput" class="secondary">Choose folder…</button>
+    <p id="outputPath" class="hint path">Not set.</p>
+  </details>
+
+  <!-- ── The readout + the buttons ─────────────────────────────────── -->
+  <section id="summary">
+    <h2>Summary</h2>
+    <p id="runtime" class="runtime">Choose some clips to see how long the video will be.</p>
+  </section>
+
+  <div id="actions">
+    <button id="validate" class="secondary">Check my setup</button>
+    <button id="build" class="primary">Build &amp; Render</button>
+  </div>
+
+  <!-- Plain-language results land here. Anything technical goes to the
+       debug console instead — she should never have to open that. -->
+  <div id="status" role="status" aria-live="polite"></div>
+
+</div>
+
+<script src="./index.js"></script>
