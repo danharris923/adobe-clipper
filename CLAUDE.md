@@ -145,9 +145,10 @@ nor UXP, so 26 is out entirely.
 
 Consequences that matter:
 
-- The UXP version of this plugin is preserved in `uxp-version/`. It's dead
-  code, kept only so nobody rewrites it from scratch if Adobe ever fixes
-  UXP. Don't maintain it. Don't delete it either.
+- A UXP version of this plugin was written and then deleted. If Adobe ever
+  fixes UXP, don't start from scratch — it's in git history at commit
+  `ec0c027^` (`git show ec0c027^:index.js`). But confirm a plugin actually
+  loads before believing any release note.
 - **The client's machine must also run 25.6.x**, and Creative Cloud
   auto-update to 26 will silently break the panel. Turning off auto-update
   for Premiere on her machine is part of the handoff, not an optional
@@ -173,7 +174,6 @@ adobe-cliper/
 ├── js/main.js            # panel logic: collect input, call the .jsx, show results
 ├── jsx/reelbuilder.jsx   # ExtendScript — everything that actually touches Premiere
 ├── install.ps1           # registry flag + junction into Premiere's extensions folder
-├── uxp-version/          # the dead UXP attempt. Kept, not maintained. See above.
 ├── README.md
 ├── CLAUDE.md             # this file
 └── backups/              # backup policy below — gitignored, local only
