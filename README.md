@@ -9,6 +9,18 @@ Status: **first build written, not yet tested against Premiere.**
 
 ---
 
+## Requires Premiere Pro 25.6.x — not 26
+
+Premiere 26 does not load plugins. Not this one, not Adobe's own sample
+one, not the older CEP kind either. UDT connects and validates the plugin
+fine, then the load silently times out. Install **Premiere Pro 25.6** from
+the Creative Cloud desktop app (Premiere Pro → **⋯** → **Other Versions**).
+
+This applies to the client's machine too. If she updates to 26, the panel
+stops appearing.
+
+---
+
 ## One-time setup in Premiere (do this before loading the plugin)
 
 The plugin doesn't invent the look of the reel — it assembles pieces you

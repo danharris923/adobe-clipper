@@ -123,6 +123,37 @@ applied, which is what guarantees full coverage at any clip count.
 
 ---
 
+## Host version — this is a hard constraint, not a preference
+
+**Premiere Pro 25.6.x. Do not develop or deploy against 26.x.**
+
+Premiere 26 does not load extensions. Verified the hard way on 2026-07-12:
+
+- UXP: every plugin times out on load — ours, *and Adobe's own untouched
+  "Create Plugin" starter template*. Tested on 26.3.0 (release) and 26.5.0
+  (Beta), from both `C:` and `D:`, with developer mode enabled at the app
+  level (Preferences → Plugins) and the machine level
+  (`C:\Program Files\Common Files\Adobe\UXP\Developer\settings.json` =
+  `{"developer": true}`), on a freshly installed UDT 2.2.1.2. UDT's
+  `Validate` succeeds against the host every time; only `Load` fails.
+  Tell-tale sign: `%APPDATA%\Adobe\UXP` is never created.
+- CEP (the older panel tech) is not a fallback — Premiere 26 doesn't load
+  CEP panels either, and Adobe's answer to that is "rewrite in UXP." Do not
+  spend time on a CEP port.
+
+UXP is reported working on 25.6.2, which is why the manifest declares
+`minVersion: 25.6.0`.
+
+**The client's machine must therefore also run 25.6.x.** If she is ever
+auto-updated to 26, the plugin stops loading and there is nothing in this
+codebase that can fix it.
+
+If a future Premiere release fixes this, that's great — but confirm a
+plugin actually loads before assuming it, and don't raise `minVersion`
+without testing.
+
+---
+
 ## Tech stack & structure
 
 This is a plain UXP plugin — no bundler, no framework needed for a project
