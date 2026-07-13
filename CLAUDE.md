@@ -153,17 +153,15 @@ Consequences that matter:
   auto-update to 26 will silently break the panel. Turning off auto-update
   for Premiere on her machine is part of the handoff, not an optional
   nicety.
-- Adobe is retiring CEP. This buys time; it isn't forever. If a future
-  Premiere fixes UXP, `uxp-version/` is the starting point — but confirm a
-  plugin actually loads before believing any release note.
+- Adobe is retiring CEP. This buys time; it isn't forever.
 
 ---
 
 ## Tech stack & structure
 
-This is a plain UXP plugin — no bundler, no framework needed for a project
-this size. Do not introduce build tooling (webpack, vite, etc.) unless it
-becomes genuinely necessary; keep this simple.
+Plain CEP — no bundler, no framework, no build step. Do not introduce build
+tooling (webpack, vite, etc.) unless it becomes genuinely necessary; keep
+this simple.
 
 ```
 adobe-cliper/
@@ -206,8 +204,9 @@ because it's the thing most likely to break in a future Premiere.
 ## Git / version control setup
 
 This repo is the single source of truth for the plugin files. The client's
-machine runs the plugin in **dev/unpacked mode** via the UXP Developer
-Tool (UDT), which watches a local folder — so the workflow is:
+machine runs the panel **unpacked and unsigned**, straight out of a folder
+on disk (`install.ps1` junctions Premiere's extensions folder at it) — so
+the workflow is:
 
 1. This repo lives in a synced folder on Dan's machine (his normal dev
    workflow) and ALSO gets synced to the client's machine via a shared
@@ -297,15 +296,29 @@ Do not build these unless separately asked:
 - Audio cleanup automation
 - Any fixed/forced total duration logic
 - Music track handling
-- Adobe Marketplace packaging/listing — this stays as an internal dev-mode
-  plugin loaded via UDT, not published anywhere
+- Adobe Marketplace packaging/listing — this stays an internal, unsigned
+  panel installed by `install.ps1`, not published anywhere
+- Signing the extension. Only needed for public distribution; the
+  PlayerDebugMode flag covers our case.
 
 ---
 
-## First task
+## Where this stands
 
-Set up the repo structure exactly as shown above, initialize git with a
-clean first commit, and produce a first-draft `manifest.json` targeting
-Premiere Pro (`premierepro`, minVersion `25.6.0`). Stop there and report
-back before writing any `index.js` logic — confirm the manifest and repo
-structure look right before moving on to the actual sequence-building code.
+The panel is written and installs. **It has never been run against
+Premiere** — the entire QA checklist above is still outstanding, and the
+sequence-building logic has never executed once.
+
+The two things most likely to need fixing on a first real build:
+
+1. **The `.mogrt` text landing in the wrong layer.** Premiere exposes a
+   template's parameters under whatever names *you* gave the layers, which
+   the code can't know in advance — so it takes the first text parameter it
+   finds and logs every parameter name it sees. If the wording lands
+   somewhere odd, that log names the right target.
+2. **The QE DOM transitions.** Undocumented and version-sensitive. Failure
+   there is designed to be non-fatal: hard cuts and a warning, not a dead
+   build.
+
+Before any of it can run, these must exist in the Premiere project (see
+README): the `MASTER` sequence, and the two `.mogrt` cards.
