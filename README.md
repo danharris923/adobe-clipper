@@ -113,8 +113,17 @@ itself is never touched.
 
 ## Getting updates to the client
 
-The client never touches git or a terminal. Her machine runs the same
-files out of a shared sync folder (Dropbox/Drive/OneDrive) that mirrors
-this repo's working directory, loaded through UDT the same way. Pushing
-updated files to the sync folder is all it takes; git is purely for Dan's
-own history and rollback.
+The client never touches git or a terminal. Her machine runs the same files
+out of a shared sync folder (Dropbox/Drive/OneDrive) that mirrors this
+repo's working directory, with `install.ps1` run once on her machine to
+point Premiere at it.
+
+After that, pushing updated files to the sync folder is all it takes — she
+just reopens the panel. Git is purely for Dan's own history and rollback.
+
+Two things that will silently break her setup, so guard against both:
+
+- **Creative Cloud updating her to Premiere 26.** The panel vanishes. Turn
+  auto-update off for Premiere on her machine.
+- **The sync folder moving.** `install.ps1` junctions Premiere's extensions
+  folder to a specific path. If the folder moves, re-run it.

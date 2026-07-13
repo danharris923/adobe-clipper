@@ -57,7 +57,7 @@ at full native length have none by definition. Premiere resolves this by
 pulling the clips slightly into each other, so the finished reel runs a
 little shorter than the sum of its clips. That trade was made deliberately:
 Dan chose dissolves over hard cuts, kept short (default 10 frames /
-~0.33s at 30fps — see `TRANSITION_FRAMES` in index.js) so the loss is
+~0.33s at 30fps — see `TRANSITION_FRAMES` in js/main.js) so the loss is
 small and the cut just reads as "not jarring."
 
 Consequently the UI's runtime figure is an ESTIMATE and must be labelled as
