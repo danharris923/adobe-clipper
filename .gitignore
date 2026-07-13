@@ -27,3 +27,6 @@ assets/client/
 *.prproj
 *.prproj.bak
 Adobe Premiere Pro Auto-Save/
+
+# UDT scratch plugins (Create Plugin drops them here)
+test/
