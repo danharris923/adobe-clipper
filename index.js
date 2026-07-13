@@ -1141,6 +1141,15 @@ function init() {
 
   $("pickOutput").addEventListener("click", pickOutputFolder);
 
+  // Show/hide the Setup drawer. Done by hand rather than with <details>,
+  // which UXP doesn't reliably support.
+  $("setupToggle").addEventListener("click", () => {
+    const body = $("setupBody");
+    const isHidden = body.className.indexOf("hidden") !== -1;
+    body.className = isHidden ? "" : "hidden";
+    logInfo(isHidden ? "Setup drawer opened." : "Setup drawer closed.");
+  });
+
   $("masterName").addEventListener("change", (e) => {
     settings.masterName = e.target.value.trim();
     saveSettings();
