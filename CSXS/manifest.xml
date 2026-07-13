@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  CEP extension manifest.
+
+  This is the CEP equivalent of UXP's manifest.json. CEP is the older
+  panel technology — Adobe is retiring it in favour of UXP, but UXP is
+  the one that doesn't actually load on this machine, and CEP does.
+  (Confirmed: Premiere's own Learning Panel is a CEP panel and runs fine
+  in 25.6.6.) See CLAUDE.md for the whole sorry story.
+
+  Two things CEP needs that UXP didn't:
+
+  1. The extension has to live in Premiere's extensions folder — Premiere
+     scans a fixed location on disk. See install.ps1, which points that
+     folder at this repo with a symlink so you can keep editing here.
+
+  2. Unsigned extensions (ours) are refused unless "PlayerDebugMode" is
+     switched on in the registry. install.ps1 does that too.
+
+  Host version [25.0,25.9] deliberately EXCLUDES Premiere 26 — 26 doesn't
+  load CEP panels at all, so there's no point pretending it might.
+-->
+<ExtensionManifest Version="12.0"
+                   ExtensionBundleId="com.danharris.reelbuilder"
+                   ExtensionBundleVersion="0.1.0"
+                   ExtensionBundleName="Client Reel Builder"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <ExtensionList>
+    <Extension Id="com.danharris.reelbuilder.panel" Version="0.1.0" />
+  </ExtensionList>
+
+  <ExecutionEnvironment>
+    <HostList>
+      <!-- PPRO = Premiere Pro. 25.x only; see note above. -->
+      <Host Name="PPRO" Version="[25.0,25.9]" />
+    </HostList>
+
+    <LocaleList>
+      <Locale Code="All" />
+    </LocaleList>
+
+    <RequiredRuntimeList>
+      <RequiredRuntime Name="CSXS" Version="9.0" />
+    </RequiredRuntimeList>
+  </ExecutionEnvironment>
+
+  <DispatchInfoList>
+    <Extension Id="com.danharris.reelbuilder.panel">
+      <DispatchInfo>
+        <Resources>
+          <!-- The panel UI. -->
+          <MainPath>./index.html</MainPath>
+          <!-- The ExtendScript that actually drives Premiere. Loaded into
+               Premiere's scripting engine when the panel opens, so every
+               function in it becomes callable from the panel. -->
+          <ScriptPath>./jsx/reelbuilder.jsx</ScriptPath>
+        </Resources>
+
+        <Lifecycle>
+          <AutoVisible>true</AutoVisible>
+        </Lifecycle>
+
+        <UI>
+          <Type>Panel</Type>
+          <!-- This is what appears under Window > Extensions. -->
+          <Menu>Client Reel Builder</Menu>
+          <Geometry>
+            <Size>
+              <Height>720</Height>
+              <Width>380</Width>
+            </Size>
+            <MinSize>
+              <Height>480</Height>
+              <Width>320</Width>
+            </MinSize>
+          </Geometry>
+        </UI>
+      </DispatchInfo>
+    </Extension>
+  </DispatchInfoList>
+</ExtensionManifest>

@@ -123,34 +123,38 @@ applied, which is what guarantees full coverage at any clip count.
 
 ---
 
-## Host version — this is a hard constraint, not a preference
+## This is a CEP panel, on Premiere 25.6. Both parts are hard constraints.
 
-**Premiere Pro 25.6.x. Do not develop or deploy against 26.x.**
+**Premiere Pro 25.6.x, CEP (not UXP). Do not "modernise" either.**
 
-Premiere 26 does not load extensions. Verified the hard way on 2026-07-12:
+The whole of 2026-07-12 was spent discovering this, so don't re-derive it:
 
-- UXP: every plugin times out on load — ours, *and Adobe's own untouched
-  "Create Plugin" starter template*. Tested on 26.3.0 (release) and 26.5.0
-  (Beta), from both `C:` and `D:`, with developer mode enabled at the app
-  level (Preferences → Plugins) and the machine level
-  (`C:\Program Files\Common Files\Adobe\UXP\Developer\settings.json` =
-  `{"developer": true}`), on a freshly installed UDT 2.2.1.2. UDT's
-  `Validate` succeeds against the host every time; only `Load` fails.
-  Tell-tale sign: `%APPDATA%\Adobe\UXP` is never created.
-- CEP (the older panel tech) is not a fallback — Premiere 26 doesn't load
-  CEP panels either, and Adobe's answer to that is "rewrite in UXP." Do not
-  spend time on a CEP port.
+**UXP does not work.** Every UXP plugin times out on load — ours, *and
+Adobe's own untouched "Create Plugin" starter template*. Tested on 26.3.0,
+26.5.0 Beta, and 25.6.6, from both `C:` and `D:`, with developer mode on at
+the app level (Preferences → Plugins) and the machine level
+(`C:\Program Files\Common Files\Adobe\UXP\Developer\settings.json` =
+`{"developer": true}`), on a fresh UDT 2.2.1.2. UDT's `Validate` succeeds
+against the host every time; only `Load` fails. Tell-tale sign:
+`%APPDATA%\Adobe\UXP` is never created — the UXP host never initialises.
 
-UXP is reported working on 25.6.2, which is why the manifest declares
-`minVersion: 25.6.0`.
+**CEP does work, but only on 25.6.** Proven, not assumed: Premiere's own
+Learning Panel is a CEP panel, and there's a live `CEPHtmlEngine12-PPRO-
+25.6.6-...` log on disk from it running. Premiere **26** loads neither CEP
+nor UXP, so 26 is out entirely.
 
-**The client's machine must therefore also run 25.6.x.** If she is ever
-auto-updated to 26, the plugin stops loading and there is nothing in this
-codebase that can fix it.
+Consequences that matter:
 
-If a future Premiere release fixes this, that's great — but confirm a
-plugin actually loads before assuming it, and don't raise `minVersion`
-without testing.
+- The UXP version of this plugin is preserved in `uxp-version/`. It's dead
+  code, kept only so nobody rewrites it from scratch if Adobe ever fixes
+  UXP. Don't maintain it. Don't delete it either.
+- **The client's machine must also run 25.6.x**, and Creative Cloud
+  auto-update to 26 will silently break the panel. Turning off auto-update
+  for Premiere on her machine is part of the handoff, not an optional
+  nicety.
+- Adobe is retiring CEP. This buys time; it isn't forever. If a future
+  Premiere fixes UXP, `uxp-version/` is the starting point — but confirm a
+  plugin actually loads before believing any release note.
 
 ---
 
@@ -161,19 +165,41 @@ this size. Do not introduce build tooling (webpack, vite, etc.) unless it
 becomes genuinely necessary; keep this simple.
 
 ```
-reel-builder-plugin/
-├── manifest.json       # plugin identity, permissions, host app + min version
-├── index.html          # panel UI markup
-├── index.js            # UI wiring + Premiere UXP DOM calls (the actual logic)
-├── styles.css           # panel look and feel
-├── README.md            # setup + how to load in UDT
+adobe-cliper/
+├── CSXS/manifest.xml     # CEP extension manifest (the equivalent of UXP's manifest.json)
+├── index.html            # panel UI markup
+├── css/styles.css        # panel look and feel
+├── js/CSInterface.js     # Adobe's bridge library — vendored, do not edit
+├── js/main.js            # panel logic: collect input, call the .jsx, show results
+├── jsx/reelbuilder.jsx   # ExtendScript — everything that actually touches Premiere
+├── install.ps1           # registry flag + junction into Premiere's extensions folder
+├── uxp-version/          # the dead UXP attempt. Kept, not maintained. See above.
+├── README.md
 ├── CLAUDE.md             # this file
-└── backups/              # see backup policy below — gitignored, local only
+└── backups/              # backup policy below — gitignored, local only
 ```
 
-Reference the official `@adobe/premierepro` TypeScript declarations for
-correct method/property names — don't guess at the UXP DOM API surface,
-verify against the installed Premiere version (25.6+ minimum) as you go.
+**The split matters.** `js/main.js` runs in a Chromium window and cannot
+touch Premiere. `jsx/reelbuilder.jsx` runs inside Premiere and does all the
+real work. They talk over `evalScript`, and **everything crossing that
+bridge is a string** — hence the JSON encode/decode on both sides.
+
+Two traps that will cost you an hour if you forget them:
+
+- **`reelbuilder.jsx` is ExtendScript: JavaScript frozen around 1999.** No
+  `let`/`const`, no arrow functions, no `Array.forEach`, no `JSON`. Modern
+  syntax fails with baffling errors. `js/main.js` is a modern browser and
+  has none of these limits — the two files look similar and are not.
+- **Time units are inconsistent in Premiere's own API.** `overwriteClip()`
+  takes SECONDS; `importMGT()` takes TICKS (1/254016000000 s). The `secs()`
+  and `ticks()` helpers exist so you never have to remember which. Don't
+  "tidy" them into one.
+
+Verify API calls against the Premiere ExtendScript reference
+(ppro-scripting.docsforadobe.dev) — don't guess. Transitions are the
+exception: they're only reachable via the undocumented **QE DOM**
+(`app.enableQE()`), which is isolated in `addTransitions()` precisely
+because it's the thing most likely to break in a future Premiere.
 
 ---
 

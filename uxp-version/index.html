@@ -1,20 +1,27 @@
 <!DOCTYPE html>
 <!--
-  Client Reel Builder — panel UI (CEP).
+  Client Reel Builder — panel markup.
 
-  A relief after UXP: CEP panels are a real Chromium browser. Normal HTML,
-  normal CSS, working localStorage, and a working dev console (right-click
-  → Inspect, once PlayerDebugMode is on). None of UXP's restrictions apply.
+  UXP renders this with its own engine. It looks like HTML and mostly
+  behaves like HTML, but it is NOT a browser, and it does NOT forgive
+  sloppy markup the way a browser does. Two rules learned the hard way:
 
-  The panel can't touch Premiere directly. It gathers what the client
-  typed, hands it to jsx/reelbuilder.jsx as a string, and shows what comes
-  back. All the Premiere work happens over there.
+    1. The document must be complete — doctype, <html>, <head>, <body>.
+       A bare <div> with a trailing <script> (which any browser would
+       happily render) makes the panel never finish loading, and UDT
+       reports it as a mysterious "plugin load timed out".
+
+    2. The stylesheet must actually be linked. There's no implicit
+       pickup of styles.css just because it sits in the folder.
+
+  Also: no working <input type="file">, no drag-and-drop from Explorer.
+  File pickers go through the UXP storage API, which is why every
+  "Choose…" below is a real <button> that calls into index.js.
 -->
 <html>
   <head>
-    <meta charset="utf-8" />
-    <title>Client Reel Builder</title>
-    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="./styles.css" />
+    <script defer src="./index.js"></script>
   </head>
 
   <body>
@@ -25,31 +32,42 @@
         <p class="sub">Pick your clips, add your words, press the button.</p>
       </header>
 
+      <!-- ── Step 1: what to call it ─────────────────────────────── -->
       <section>
         <h2>1. Name this reel</h2>
         <label for="clientName">Client or project name</label>
         <input id="clientName" type="text" placeholder="e.g. Acme Skincare" />
-        <p class="hint">Used to name the new sequence, e.g. <em>Acme Skincare_2026-07-12</em>.</p>
+        <p class="hint">
+          Used to name the new sequence, e.g. <em>Acme Skincare_2026-07-12</em>.
+        </p>
       </section>
 
+      <!-- ── Step 2: the words ───────────────────────────────────── -->
       <section>
         <h2>2. Your words</h2>
+
         <label for="introText">Opening text</label>
         <input id="introText" type="text" placeholder="Shown on the first card" />
+
         <label for="outroText">Closing text</label>
         <input id="outroText" type="text" placeholder="Shown on the last card" />
       </section>
 
+      <!-- ── Step 3: the clips ───────────────────────────────────── -->
       <section>
         <h2>3. Your clips</h2>
         <button id="pickClips" class="secondary">Choose video clips…</button>
         <p id="clipCount" class="hint">No clips chosen yet.</p>
-        <!-- Order on screen = order in the video. Rows get Up/Down/Remove. -->
+
+        <!-- Filled in by index.js. Each row gets Up/Down buttons, because
+             the order of this list is the order they'll appear in. -->
         <ul id="clipList"></ul>
       </section>
 
+      <!-- ── Step 4: options ─────────────────────────────────────── -->
       <section>
         <h2>4. Options</h2>
+
         <label class="checkbox">
           <input id="keepAudio" type="checkbox" checked />
           <span>Keep the sound from my clips</span>
@@ -57,8 +75,18 @@
         <p class="hint">Untick this to make the whole video silent.</p>
       </section>
 
+      <!-- ── Setup: the things that rarely change ────────────────── -->
+      <!-- Hidden behind a toggle. The client sets these once; after that
+           they're remembered and she never opens this again.
+
+           This is a button + a div rather than <details>/<summary>,
+           because UXP's support for those is unreliable and a collapsed
+           panel that won't open would strand her with no way to set the
+           watermark. A button is boring and definitely works. -->
       <section>
-        <button id="setupToggle" class="secondary">Setup — you only need to do this once</button>
+        <button id="setupToggle" class="secondary">
+          Setup — you only need to do this once
+        </button>
 
         <div id="setupBody" class="hidden">
           <label for="masterName">Name of the master sequence in Premiere</label>
@@ -94,9 +122,12 @@
         </div>
       </section>
 
+      <!-- ── The readout + the buttons ───────────────────────────── -->
       <section id="summary">
         <h2>Summary</h2>
-        <p id="runtime" class="runtime">Choose some clips to see how long the video will be.</p>
+        <p id="runtime" class="runtime">
+          Choose some clips to see how long the video will be.
+        </p>
       </section>
 
       <div id="actions">
@@ -104,13 +135,10 @@
         <button id="build" class="primary">Build &amp; Render</button>
       </div>
 
-      <!-- Plain-language results only. Anything technical goes to the
-           console instead — she should never have to open that. -->
+      <!-- Plain-language results land here. Anything technical goes to the
+           debug console instead — she should never have to open that. -->
       <div id="status"></div>
 
     </div>
-
-    <script src="js/CSInterface.js"></script>
-    <script src="js/main.js"></script>
   </body>
 </html>

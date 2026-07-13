@@ -11,13 +11,38 @@ Status: **first build written, not yet tested against Premiere.**
 
 ## Requires Premiere Pro 25.6.x — not 26
 
-Premiere 26 does not load plugins. Not this one, not Adobe's own sample
-one, not the older CEP kind either. UDT connects and validates the plugin
-fine, then the load silently times out. Install **Premiere Pro 25.6** from
-the Creative Cloud desktop app (Premiere Pro → **⋯** → **Other Versions**).
+Premiere 26 loads no extensions at all: not UXP, not CEP, not Adobe's own
+sample plugin. Install **Premiere Pro 25.6** from the Creative Cloud
+desktop app (Premiere Pro → **⋯** → **Other Versions**).
 
-This applies to the client's machine too. If she updates to 26, the panel
-stops appearing.
+This applies to the client's machine too. **If Creative Cloud auto-updates
+her to 26, the panel silently disappears** — turn auto-update off for
+Premiere on her machine.
+
+---
+
+## Installing the panel
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install.ps1
+```
+
+Then fully quit and restart Premiere. The panel appears under
+**Window → Extensions → Client Reel Builder**.
+
+That script does two things. It sets a registry flag (`PlayerDebugMode`)
+so Premiere will run an extension Adobe hasn't signed — ours isn't, and
+signing is only worth it for public distribution. And it creates a junction
+from Premiere's extensions folder to this repo, so Premiere reads the panel
+straight out of your working copy: edit a file, reopen the panel, see the
+change.
+
+There's no build step and no dev tool. Premiere scans its extensions folder
+at startup, which is why a restart is needed after installing (but not
+after editing).
+
+To see the logs — the plugin narrates every step — **right-click inside the
+panel → Inspect**.
 
 ---
 
@@ -85,34 +110,6 @@ Every build works on a **duplicate** of the master sequence. The master
 itself is never touched.
 
 ---
-
-## Setup (Dan)
-
-```
-git clone https://github.com/danharris923/adobe-clipper.git
-```
-
-There's no build step and no dependencies — it's a plain UXP plugin. The
-files in the repo root *are* the plugin.
-
-## Loading the plugin in Premiere (UDT)
-
-The plugin runs unpacked in dev mode via Adobe's **UXP Developer Tool**
-(UDT), which watches a folder on disk and hot-reloads the panel.
-
-1. Install the UXP Developer Tool from the Adobe Creative Cloud desktop app
-   (Marketplace tab → search "UXP Developer Tool").
-2. Open Premiere Pro (25.6.0 or newer — the plugin declares that as its
-   minimum) and leave it running. UDT can only talk to a host app that's
-   already open.
-3. In UDT, click **Add Plugin** and select this repo's `manifest.json`.
-4. The plugin appears in the UDT list. Click **⋯ → Load** to push it into
-   Premiere.
-5. In Premiere, open it from **Window → Extensions → Client Reel Builder**.
-
-While it's loaded, **⋯ → Watch** makes UDT reload the panel automatically
-whenever a file changes, and **⋯ → Debug** opens the dev console — that's
-where the plugin's log output shows up.
 
 ## Getting updates to the client
 
